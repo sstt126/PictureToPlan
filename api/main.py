@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import json
 import os
 from dotenv import load_dotenv
 from google import genai
@@ -69,7 +70,7 @@ def picture_to_plan():
     client = genai.Client(api_key=GOOGLE_API_KEY)
 
     # 読み込ませる画像をGoogleサーバーにアップロード
-    plan_picture = client.files.upload(file="/Users/maineko./picturetoplan/api/sample.png")
+    plan_picture = client.files.upload(file="sample.png")
 
     # モデル指定
     AI_MODEL = "gemini-3.1-flash-lite"
@@ -86,4 +87,4 @@ def picture_to_plan():
 
     print(response.text)
 
-    return {response.text}
+    return json.loads(response.text)
