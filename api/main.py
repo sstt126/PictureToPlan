@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 import json
 import os
@@ -64,13 +64,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/api")
-def picture_to_plan():
+@app.post("/api/predict")
+def predict(file: UploadFile = File(...)):
     # Gemini APIの操作クライアントを作成
     client = genai.Client(api_key=GOOGLE_API_KEY)
 
-    # 読み込ませる画像をGoogleサーバーにアップロード
-    plan_picture = client.files.upload(file="sample.png")
+    image_bytes = file.file.read()
 
     # モデル指定
     AI_MODEL = "gemini-3.1-flash-lite"
@@ -78,7 +77,13 @@ def picture_to_plan():
     # モデル、画像、プロンプトを指定
     response = client.models.generate_content(
         model = AI_MODEL,
-        contents = [plan_picture, PROMPT],
+        contents=[
+            types.Part.from_bytes(
+                data=image_bytes,
+                mime_type=file.content_type
+            ),
+            PROMPT,
+        ],
         config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 response_schema = JSONFormat
