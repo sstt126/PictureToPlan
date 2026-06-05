@@ -6,6 +6,23 @@ export default function Home() {
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+
+  type CalendarData = {
+    text: string;
+    details: string;
+    year_start: string;
+    month_start: string;
+    date_start: string;
+    year_end: string;
+    month_end: string;
+    date_end: string;
+    hours_start: string;
+    minutes_start: string;
+    hours_end: string;
+    minutes_end: string;
+    location: string;
+  };
 
   // ① 画像が選択されたら、ブラウザ上にプレビューを表示する処理
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,6 +66,59 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
+
+    
+  };
+  const formatDate = (data: CalendarData) => {
+    if (
+      data.year_start === data.year_end &&
+      data.month_start === data.month_end &&
+      data.date_start === data.date_end
+    ){
+      return `${data.year_start}/${data.month_start}/${data.date_start}`;
+    }else {
+      return `${data.year_start}/${data.month_start}/${data.date_start} ～ ${data.year_end}/${data.month_end}/${data.date_end}`;
+    };
+  };
+  const formatTime = (data: CalendarData) => {
+    return `${data.hours_start}:${data.minutes_start} ～ ${data.hours_end}:${data.minutes_end}`;
+  };
+
+  const makeUrl = (data: CalendarData) => {
+    const {
+      text,
+      details,
+      year_start,
+      month_start,
+      date_start,
+      year_end,
+      month_end,
+      date_end,
+      hours_start,
+      minutes_start,
+      hours_end,
+      minutes_end,
+      location,
+    } = data;
+
+    const start = `${year_start}${month_start}${date_start}T${hours_start}${minutes_start}00`;
+    const end = `${year_end}${month_end}${date_end}T${hours_end}${minutes_end}00`;
+
+    const params = new URLSearchParams({
+      action: "TEMPLATE",
+      text,
+      dates: `${start}/${end}`,
+      ctz: "Asia/Tokyo",
+      details,
+      location,
+    });
+
+    return `https://calendar.google.com/calendar/render?${params}`;
+  };
+  const handleOpen = () => {
+    const url = makeUrl(data);
+
+    window.open(url, "_blank");
   };
 
 
@@ -83,16 +153,21 @@ export default function Home() {
 
       {/* バックエンドからの結果表示 */}
       {data && (
-        <div style={{ marginTop: '20px', color: 'white' }}>
+        <div style={{ marginTop: "20px", color: "white" }}>
           <h3>件名: {data.text}</h3>
           <h3>詳細: {data.details}</h3>
-          <h3>日付: {data.dates}</h3>
-          <h3>時間: {data.time}</h3>
+          <h3>日付: {formatDate(data)}</h3>
+          <h3>時間: {formatTime(data)}</h3>
           <h3>場所: {data.location}</h3>
         </div>
       )}
-    
 
+      {/* Googleカレンダーに登録するためのURL */}
+      {data && (
+        <button onClick={handleOpen}>
+          Googleカレンダーに登録！
+        </button>
+      )}
     </div>
   );
 }

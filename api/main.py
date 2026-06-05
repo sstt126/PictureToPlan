@@ -27,29 +27,45 @@ PROMPT = f"""
         
         条件：
         - スケジュールの件名、スケジュールの詳細、開催される日付、開催される時間、開催される場所をJSONで返してください。
-        - 画像内に「年」や「月」がない場合は、基準日から最も近い日付を推測して「YYYY-MM-DD」形式に補完してください。
+        - 画像内に「年」や「月」がない場合は、基準日から最も近い日付を推測して「YYYYMMDD」形式に補完してください。
         - 時間の記載がない場合は、開始・終了ともに空文字（""）にしてください。
         - 場所の記載がない場合は、空文字（""）にしてください。
         - メモには、参加費、持参物、その他の補足事項などがあれば簡潔に箇条書きでまとめてください。なければ空文字にしてください。
 
-"""
-        # 出力は、以下のキーを持つ完全なJSON形式（Markdown記法なし）のみを出力してください。
-        # {{
-        #     "text": "件名",
-        #     "details": "詳細",
-        #     "dates": "YYYY-MM-DD",
-        #     "time": "HH:MM - HH:MM または HH:MM",
-        #     "location": "場所の名前",
-        # }}
 
+        出力は、以下のキーを持つ完全なJSON形式（Markdown記法なし）のみを出力してください。
+        {{
+            "text": "件名",
+            "details": "詳細",
+            "year-start": "YYYY",
+            "month-start": "MM",
+            "date-start": "DD",
+            "year-end": "YYYY",
+            "month-end": "MM",
+            "date-end": "DD",
+            "hours-start": "HH",
+            "minutes-start": "MM",
+            "hours-end": "HH",
+            "minutes-end": "MM",
+            "location": "場所の名前",
+        }}
+"""
 
 
 # スキーマ定義
 class JSONFormat(BaseModel):
     text: str
     details: str
-    dates: str
-    time: str
+    year_start: str
+    month_start: str
+    date_start: str
+    year_end: str
+    month_end: str
+    date_end: str
+    hours_start: str
+    minutes_start: str
+    hours_end: str
+    minutes_end: str
     location: str
 
 
