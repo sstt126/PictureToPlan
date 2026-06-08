@@ -4,6 +4,8 @@ import { useState, useRef } from "react";
 export default function Home() {
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedFileName, setSelectedFileName] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [data, setData] = useState<CalendarData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -40,23 +42,48 @@ export default function Home() {
     location: "",
   });
 
+  const selectFile = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      alert("画像ファイルを選択してください！");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("10MB以下の画像を選択してください！");
+      return;
+    }
+
+    setSelectedFile(file);
+    setSelectedFileName(file.name);
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   // ① 画像が選択されたら、ブラウザ上にプレビューを表示する処理
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setSelectedFileName(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file); // 画像をデータURLに変換してプレビューできるようにする
+      selectFile(file);
+    }
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+
+    const file = event.dataTransfer.files?.[0];
+    if (file) {
+      selectFile(file);
     }
   };
 
   // ② ボタンを押したら、FastAPIサーバーに画像をアップロードする処理
   const handleUpload = async () => {
-    const file = fileInputRef.current?.files?.[0];
-    if (!file) {
+    if (!selectedFile) {
       alert("画像を選択してください！");
       return;
     }
@@ -65,7 +92,7 @@ export default function Home() {
 
     // ★重要: FormDataを使ってファイルを包む
     const formData = new FormData();
-    formData.append("file", file); // 第1引数の 'file' は、FastAPI側の引数名と合わせる！
+    formData.append("file", selectedFile); // 第1引数の 'file' は、FastAPI側の引数名と合わせる！
 
     try {
       const response = await fetch("/api/predict", {
@@ -158,7 +185,19 @@ export default function Home() {
             <h2>画像をアップロード</h2>
           </div>
 
-          <div className="upload-box">
+          <div
+            className={`upload-box${isDragging ? " is-dragging" : ""}`}
+            onDragEnter={(event) => {
+              event.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragOver={(event) => {
+              event.preventDefault();
+              event.dataTransfer.dropEffect = "copy";
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+          >
             <div className="upload-cloud">☁</div>
             <p className="upload-main-text">ここに画像をドラッグ＆ドロップ</p>
             <p className="upload-sub-text">または</p>
