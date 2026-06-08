@@ -1,8 +1,9 @@
 "use client";
-import { useState, useRef } from 'react';
+import { useState, useRef } from "react";
 
 export default function Home() {
   const [preview, setPreview] = useState<string | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState("");
   const [data, setData] = useState<CalendarData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -43,6 +44,7 @@ export default function Home() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      setSelectedFileName(file.name);
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result as string);
@@ -63,16 +65,16 @@ export default function Home() {
 
     // ★重要: FormDataを使ってファイルを包む
     const formData = new FormData();
-    formData.append('file', file); // 第1引数の 'file' は、FastAPI側の引数名と合わせる！
+    formData.append("file", file); // 第1引数の 'file' は、FastAPI側の引数名と合わせる！
 
     try {
-      const response = await fetch('/api/predict', {
-        method: 'POST',
+      const response = await fetch("/api/predict", {
+        method: "POST",
         body: formData, // bodyにformDataをそのまま入れる
         // 注意: Content-Typeヘッダーは手動で書かない（ブラウザが自動で設定してくれます）
       });
 
-      if (!response.ok) throw new Error('アップロードに失敗しました');
+      if (!response.ok) throw new Error("アップロードに失敗しました");
 
       const result = await response.json();
       setData(result);
@@ -96,8 +98,6 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-
-    
   };
 
   const makeUrl = () => {
@@ -131,188 +131,215 @@ export default function Home() {
 
     return `https://calendar.google.com/calendar/render?${params}`;
   };
+
   const handleOpen = () => {
     const url = makeUrl();
-
     window.open(url, "_blank");
   };
 
-
-
   return (
-    <div style={{ padding: '20px' }}>
-      <h2>ローカルから画像アップロード</h2>
-
-      {/* ファイル選択ボタン */}
-      <input 
-        type="file" 
-        accept="image/*" 
-        ref={fileInputRef} 
-        onChange={handleFileChange} 
-      />
-
-      {/* 選択されたらプレビューを表示 */}
-      {preview && (
-        <div style={{ marginTop: '20px' }}>
-          <img src={preview} alt="Preview" style={{ maxWidth: '300px', borderRadius: '8px' }} />
+    <main className="app-page">
+      <header className="app-header">
+        <div className="app-brand">
+          <div className="brand-icon">▦</div>
+          <span>Image to Google Calendar</span>
         </div>
-      )}
 
-      {/* 送信ボタン */}
-      <button 
-        onClick={handleUpload} 
-        disabled={isLoading} 
-        style={{ marginTop: '20px', display: 'block', padding: '10px' }}
-      >
-        {isLoading ? '送信中...' : 'サーバーに送って予測する'}
-      </button>
+        <div className="header-actions">
+          <span className="help-link">？ 使い方</span>
+          <div className="user-icon">●</div>
+        </div>
+      </header>
 
-      {/* バックエンドからの結果表示 */}
-      {data && (
-        <div style={{ marginTop: "20px", color: "white" }}>
-          
-          <span>件名：</span>
-            <input
-              value={pieceData.text}
-              onChange={(e) => setPieceData({...pieceData,text: e.target.value})}
-              placeholder='件名'
-              style={{
-                width: '90%',
-              }}
-            />
-          <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-            <span>詳細：</span>
+      <section className="app-container">
+        <div className="panel upload-panel">
+          <div className="section-title">
+            <span className="section-icon">↥</span>
+            <h2>画像をアップロード</h2>
+          </div>
+
+          <div className="upload-box">
+            <div className="upload-cloud">☁</div>
+            <p className="upload-main-text">ここに画像をドラッグ＆ドロップ</p>
+            <p className="upload-sub-text">または</p>
+
+            <label className="file-button">
+              ファイルを選択
+              <input
+                className="file-input"
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+              />
+            </label>
+
+            <p className="format-text">JPG, PNG, GIF, WEBP（最大 10MB）</p>
+          </div>
+
+          <div className="divider" />
+
+          <div className="preview-area">
+            <div className="preview-heading">
+              <span>◎</span>
+              <h3>プレビュー</h3>
+            </div>
+
+            <div className="preview-card">
+              {preview ? (
+                <img src={preview} alt="Preview" className="preview-image" />
+              ) : (
+                <div className="preview-placeholder">画像未選択</div>
+              )}
+
+              <div className="preview-info">
+                <p className="preview-file-name">
+                  {selectedFileName || "画像ファイルを選択してください"}
+                </p>
+                <p className="preview-file-meta">
+                  {preview ? "画像を確認できます" : "選択後にプレビューが表示されます"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <button
+            className="primary-button predict-button"
+            onClick={handleUpload}
+            disabled={isLoading}
+          >
+            <span>✦</span>
+            {isLoading ? "送信中..." : "サーバーに送って予測する"}
+          </button>
+
+          <p className="security-note">▣ 画像は安全に処理され、保存されません</p>
+        </div>
+
+        <div className="panel form-panel">
+          <div className="section-title">
+            <span className="section-icon">▣</span>
+            <h2>予定情報を確認</h2>
+          </div>
+
+          <div className="form-stack">
+            <label className="field full-field">
+              <span>件名</span>
+              <input
+                value={pieceData.text}
+                onChange={(e) => setPieceData({ ...pieceData, text: e.target.value })}
+                placeholder="件名"
+              />
+            </label>
+
+            <label className="field full-field">
+              <span>詳細</span>
               <textarea
                 value={pieceData.details}
                 onChange={(e) => setPieceData({ ...pieceData, details: e.target.value })}
-                placeholder='詳細'
-                style={{
-                  width: '90%',
-                }}
+                placeholder="詳細"
               />
-              </div>
-          <div>
-              <span>開始日：</span>
-              <input
-                value={pieceData.year_start}
-                onChange={(e) => setPieceData({ ...pieceData, year_start: e.target.value })}
-                placeholder='開始年'
-                style={{
-                  width: '40px',
-                  textAlign: 'center',
-                }}
-              />
-              <span>/</span>
-              <input
-                value={pieceData.month_start}
-                onChange={(e) => setPieceData({ ...pieceData, month_start: e.target.value })}
-                placeholder='開始月'
-                style={{
-                  width: '20px',
-                  textAlign: 'center',
-                }}
-              />
-              <span>/</span>
-              <input
-                value={pieceData.date_start}
-                onChange={(e) => setPieceData({ ...pieceData, date_start: e.target.value })}
-                placeholder='開始日'
-                style={{
-                  width: '20px',
-                  textAlign: 'center',
-                }}
-              />
-                <span>　　　終了日：</span>
-                <input
-                  value={pieceData.year_end}
-                  onChange={(e) => setPieceData({ ...pieceData, year_end: e.target.value })}
-                  placeholder='終了年'
-                  style={{
-                    width: '45px',
-                    textAlign: 'center',
-                  }}
-                />
-                <span>/</span>
-                <input
-                  value={pieceData.month_end}
-                  onChange={(e) => setPieceData({ ...pieceData, month_end: e.target.value })}
-                  placeholder='終了月'
-                  style={{
-                    width: '20px',
-                    textAlign: 'center',
-                  }}
-                />
-                <span>/</span>
-                <input
-                  value={pieceData.date_end}
-                  onChange={(e) => setPieceData({ ...pieceData, date_end: e.target.value })}
-                  placeholder='終了日'
-                  style={{
-                    width: '20px',
-                    textAlign: 'center',
-                  }}
-                />
-          </div>
-          <div>
-            <span>開始時間：</span>
-            <input
-              value={pieceData.hours_start}
-              onChange={(e) => setPieceData({ ...pieceData, hours_start: e.target.value })}
-              placeholder='開始時'
-              style={{
-                width: '20px',
-                textAlign: 'center',
-              }}
-            />
-            <span>:</span>
-            <input
-              value={pieceData.minutes_start}
-              onChange={(e) => setPieceData({ ...pieceData, minutes_start: e.target.value })}
-              placeholder='開始分'
-              style={{
-                width: '20px',
-                textAlign: 'center',
-              }}
-            />
-            <span>　　　終了時間：</span>
-            <input
-              value={pieceData.hours_end}
-              onChange={(e) => setPieceData({ ...pieceData, hours_end: e.target.value })}
-              placeholder='終了時'
-              style={{
-                width: '20px',
-                textAlign: 'center',
-              }}
-            />
-            <span>:</span>
-            <input
-              value={pieceData.minutes_end}
-              onChange={(e) => setPieceData({ ...pieceData, minutes_end: e.target.value })}
-              placeholder='終了分'
-              style={{
-                width: '20px',
-                textAlign: 'center',
-              }}
-            />
-          </div>
-          <span>場所：</span>
-          <input
-            value={pieceData.location}
-            onChange={(e) => setPieceData({ ...pieceData, location: e.target.value })}
-            placeholder='場所'
-            style={{
-              width: '90%',
-            }}
-          />
-        </div>
-      )}
+            </label>
 
-      {/* Googleカレンダーに登録するためのURL */}
-      {data && (
-        <button onClick={handleOpen}>
-          Googleカレンダーに登録！
-        </button>
-      )}
-    </div>
+            <div className="split-grid">
+              <div className="field">
+                <span>開始日</span>
+                <div className="date-inputs">
+                  <input
+                    value={pieceData.year_start}
+                    onChange={(e) => setPieceData({ ...pieceData, year_start: e.target.value })}
+                    placeholder="YYYY"
+                  />
+                  <span>/</span>
+                  <input
+                    value={pieceData.month_start}
+                    onChange={(e) => setPieceData({ ...pieceData, month_start: e.target.value })}
+                    placeholder="MM"
+                  />
+                  <span>/</span>
+                  <input
+                    value={pieceData.date_start}
+                    onChange={(e) => setPieceData({ ...pieceData, date_start: e.target.value })}
+                    placeholder="DD"
+                  />
+                </div>
+              </div>
+
+              <div className="field">
+                <span>終了日</span>
+                <div className="date-inputs">
+                  <input
+                    value={pieceData.year_end}
+                    onChange={(e) => setPieceData({ ...pieceData, year_end: e.target.value })}
+                    placeholder="YYYY"
+                  />
+                  <span>/</span>
+                  <input
+                    value={pieceData.month_end}
+                    onChange={(e) => setPieceData({ ...pieceData, month_end: e.target.value })}
+                    placeholder="MM"
+                  />
+                  <span>/</span>
+                  <input
+                    value={pieceData.date_end}
+                    onChange={(e) => setPieceData({ ...pieceData, date_end: e.target.value })}
+                    placeholder="DD"
+                  />
+                </div>
+              </div>
+
+              <div className="field">
+                <span>開始時間</span>
+                <div className="time-inputs">
+                  <input
+                    value={pieceData.hours_start}
+                    onChange={(e) => setPieceData({ ...pieceData, hours_start: e.target.value })}
+                    placeholder="HH"
+                  />
+                  <span>:</span>
+                  <input
+                    value={pieceData.minutes_start}
+                    onChange={(e) => setPieceData({ ...pieceData, minutes_start: e.target.value })}
+                    placeholder="mm"
+                  />
+                </div>
+              </div>
+
+              <div className="field">
+                <span>終了時間</span>
+                <div className="time-inputs">
+                  <input
+                    value={pieceData.hours_end}
+                    onChange={(e) => setPieceData({ ...pieceData, hours_end: e.target.value })}
+                    placeholder="HH"
+                  />
+                  <span>:</span>
+                  <input
+                    value={pieceData.minutes_end}
+                    onChange={(e) => setPieceData({ ...pieceData, minutes_end: e.target.value })}
+                    placeholder="mm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <label className="field full-field">
+              <span>場所</span>
+              <input
+                value={pieceData.location}
+                onChange={(e) => setPieceData({ ...pieceData, location: e.target.value })}
+                placeholder="場所"
+              />
+            </label>
+          </div>
+
+          <button className="calendar-button" onClick={handleOpen} disabled={!data}>
+            <span className="calendar-icon">31</span>
+            Googleカレンダーに追加
+          </button>
+
+          <p className="security-note">▣ Googleカレンダーの認証ページへ移動します</p>
+        </div>
+      </section>
+    </main>
   );
 }
