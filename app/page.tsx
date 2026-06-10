@@ -71,7 +71,7 @@ export default function Home() {
     }
   };
 
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = (event: React.DragEvent<HTMLLabelElement>) => {
     event.preventDefault();
     setIsDragging(false);
 
@@ -185,8 +185,8 @@ export default function Home() {
             <h2>画像をアップロード</h2>
           </div>
 
-          <div
-            className={`upload-box${isDragging ? " is-dragging" : ""}`}
+          <label
+            className={`upload-box${isDragging ? " is-dragging" : ""}${preview ? " has-preview" : ""}`}
             onDragEnter={(event) => {
               event.preventDefault();
               setIsDragging(true);
@@ -198,49 +198,32 @@ export default function Home() {
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
           >
-            <div className="upload-cloud">☁</div>
-            <p className="upload-main-text">ここに画像をドラッグ＆ドロップ</p>
-            <p className="upload-sub-text">または</p>
+            <input
+              className="file-input"
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+            />
 
-            <label className="file-button">
-              ファイルを選択
-              <input
-                className="file-input"
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-              />
-            </label>
-
-            <p className="format-text">JPG, PNG, GIF, WEBP（最大 10MB）</p>
-          </div>
-
-          <div className="divider" />
-
-          <div className="preview-area">
-            <div className="preview-heading">
-              <span>◎</span>
-              <h3>プレビュー</h3>
-            </div>
-
-            <div className="preview-card">
-              {preview ? (
-                <img src={preview} alt="Preview" className="preview-image" />
-              ) : (
-                <div className="preview-placeholder">画像未選択</div>
-              )}
-
-              <div className="preview-info">
-                <p className="preview-file-name">
-                  {selectedFileName || "画像ファイルを選択してください"}
-                </p>
-                <p className="preview-file-meta">
-                  {preview ? "画像を確認できます" : "選択後にプレビューが表示されます"}
-                </p>
+            {preview ? (
+              <div className="uploaded-preview">
+                <img src={preview} alt="Preview" className="upload-preview-image" />
+                <p className="upload-file-name">{selectedFileName}</p>
+                <p className="upload-change-text">画像をクリックして変更</p>
               </div>
-            </div>
-          </div>
+            ) : (
+              <>
+                <div className="upload-cloud">☁</div>
+                <p className="upload-main-text">ここに画像をドラッグ＆ドロップ</p>
+                <p className="upload-sub-text">または</p>
+
+                <span className="file-button">ファイルを選択</span>
+
+                <p className="format-text">JPG, PNG, GIF, WEBP（最大 10MB）</p>
+              </>
+            )}
+          </label>
 
           <button
             className="primary-button predict-button"
