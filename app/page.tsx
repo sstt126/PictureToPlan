@@ -173,8 +173,7 @@ export default function Home() {
         </div>
 
         <div className="header-actions">
-          <span className="help-link">？ 使い方</span>
-          <div className="user-icon">●</div>
+          <span className="help-link">使い方</span>
         </div>
       </header>
 
