@@ -358,7 +358,7 @@ export default function Home() {
             Googleカレンダーに追加
           </button>
 
-          <p className="security-note">▣ Googleカレンダーの認証ページへ移動します</p>
+          <p className="security-note">▣ Googleカレンダーへの登録ページへ移動します</p>
         </div>
       </section>
     </main>
