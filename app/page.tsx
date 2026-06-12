@@ -55,6 +55,16 @@ export default function Home() {
 
     setSelectedFile(file);
     setSelectedFileName(file.name);
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+
+    if (!["jpg", "jpeg", "png", "gif", "webp"].includes(extension)) {
+      alert("JPG, PNG, GIF, WEBP形式の画像を選択してください。");
+      return;
+    }
+    if (file.size > 4.5 * 1024 * 1024) {
+      alert("4.5MB以下の画像を選択してください。");
+      return;
+    }
 
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -219,7 +229,7 @@ export default function Home() {
 
                 <span className="file-button">ファイルを選択</span>
 
-                <p className="format-text">JPG, PNG, GIF, WEBP（最大 10MB）</p>
+                <p className="format-text">JPG, PNG, GIF, WEBP（最大 4.5MB）</p>
               </>
             )}
           </label>
