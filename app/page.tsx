@@ -179,7 +179,7 @@ export default function Home() {
       <header className="app-header">
         <div className="app-brand">
           <div className="brand-icon">▦</div>
-          <span>Image to Google Calendar</span>
+          <span>PicPlanner</span>
         </div>
 
         <div className="header-actions">
